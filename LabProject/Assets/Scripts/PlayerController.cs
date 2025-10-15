@@ -7,27 +7,31 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
 
     [Header("Movement Settings")]
-    public float forwardSpeed = 10f; 	  // Forward speed
-    public float laneDistance = 4f; 	  // Distance between lanes
-    public float laneChangeSpeed = 10f;   // Speed of lane change
+    public float forwardSpeed = 10f;    // Forward speed
+    public float laneDistance = 4f;     // Distance between lanes
+    public float laneChangeSpeed = 10f; // Speed of lane change
     
     [Header("Boundary Settings")]
     public float maxLaneOffset = 3.8f; 
-    
 
     [Header("Jump Settings")]
-    public float jumpForce = 7f; 		  // How strong the jump is
-    private bool isGrounded = true; 	  // Check if player is on the ground
+    public float jumpForce = 7f;        // How strong the jump is
+    private bool isGrounded = true;     // Check if player is on the ground
 
-    private int desiredLane = 1; 		  // 0 = Left, 1 = Middle, 2 = Right
-    private float targetX; 				  // Target X position for lane
+    private int desiredLane = 1;        // 0 = Left, 1 = Middle, 2 = Right
+    private float targetX;              // Target X position for lane
+
+    private GameManager gameManager;    // Reference to GameManager
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.useGravity = true; 			  // Enable gravity for jumping
+        rb.useGravity = true; 
         rb.freezeRotation = true;
-        targetX = 0f; 					  // Start in middle lane
+        targetX = 0f; // Start in middle lane
+
+        // Find the GameManager in the scene
+        gameManager = FindObjectOfType<GameManager>();
     }
 
     void Update()
@@ -52,10 +56,10 @@ public class PlayerController : MonoBehaviour
             Jump();
         }
 
-        // Calculate target X position based on the desired lane
+        // Calculate target X position based on desired lane
         float calculatedTargetX = (desiredLane - 1) * laneDistance;
-        
-        // Clamp the target X position to prevent going past the road edge.
+
+        // Clamp the target X position to prevent going past the road edge
         targetX = Mathf.Clamp(calculatedTargetX, -maxLaneOffset, maxLaneOffset);
     }
 
@@ -100,6 +104,18 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = false;
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        // --- Game Over on Obstacle ---
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            if (gameManager != null)
+            {
+                gameManager.GameOver();
+            }
         }
     }
 }
