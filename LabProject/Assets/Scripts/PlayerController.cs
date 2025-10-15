@@ -4,25 +4,25 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private CharacterController controller;
-    private Vector3 moveVector;  // Combined movement vector
-    public float forwardSpeed;
-    public float laneDistance = 4f;
-    public float laneChangeSpeed = 5f;
+    private Rigidbody rb;
+    public float forwardSpeed = 10f;     // Speed moving forward
+    public float laneDistance = 4f;      // Distance between lanes
+    public float laneChangeSpeed = 10f;  // How fast player slides to target lane
 
-    private int desiredLane = 1; // 0:left, 1:middle, 2:right
-    private float targetX;       // Target x position for lane
+    private int desiredLane = 1;         // 0 = Left, 1 = Middle, 2 = Right
+    private float targetX;               // X position target for lane
 
     void Start()
     {
-        controller = GetComponent<CharacterController>();
-        forwardSpeed = 5f; // Set your forward speed here
+        rb = GetComponent<Rigidbody>();
+        rb.useGravity = false;           // Prevent falling
+        rb.freezeRotation = true;        // Keep upright
         targetX = 0f;
     }
 
     void Update()
     {
-        // Input to change lanes
+        // Handle lane input
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             desiredLane++;
@@ -34,20 +34,21 @@ public class PlayerController : MonoBehaviour
             if (desiredLane < 0) desiredLane = 0;
         }
 
-        // Calculate target X position based on lane
+        // Calculate target X position based on desired lane
         targetX = (desiredLane - 1) * laneDistance;
     }
 
     void FixedUpdate()
     {
-        // Calculate horizontal movement toward target lane smoothly
-        float deltaX = targetX - transform.position.x;
-        float horizontalMove = Mathf.Clamp(deltaX, -laneChangeSpeed * Time.fixedDeltaTime, laneChangeSpeed * Time.fixedDeltaTime);
+        // Move forward constantly
+        Vector3 forwardMove = Vector3.forward * forwardSpeed * Time.fixedDeltaTime;
 
-        // Build move vector: horizontal + forward
-        moveVector = new Vector3(horizontalMove, 0, forwardSpeed * Time.fixedDeltaTime);
+        // Move sideways smoothly toward target lane
+        float newX = Mathf.MoveTowards(transform.position.x, targetX, laneChangeSpeed * Time.fixedDeltaTime);
 
-        // Move using CharacterController
-        controller.Move(moveVector);
+        // Combine both moves (keep Y constant)
+        Vector3 newPosition = new Vector3(newX, transform.position.y, transform.position.z) + forwardMove;
+
+        rb.MovePosition(newPosition);
     }
 }
