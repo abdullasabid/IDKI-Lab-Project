@@ -18,7 +18,8 @@ private void OnTriggerEnter(Collider other)
 {
     if (other.tag == "Player")
     {
-        GameManager.numberOfCoins += 1; // ✅ Correct reference
+        FindObjectOfType<AudioManager>().PlaySound("PickUpCoin");
+        GameManager.numberOfCoins += 1; 
         Debug.Log("Coins: " + GameManager.numberOfCoins);
         Destroy(gameObject);
     }
