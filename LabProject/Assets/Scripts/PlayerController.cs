@@ -7,26 +7,26 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
 
     [Header("Movement Settings")]
-    public float forwardSpeed = 5f;       // Starting forward speed
-    public float laneDistance = 4f;       // Distance between lanes
+    public float forwardSpeed = 5f; 	  // Starting forward speed
+    public float laneDistance = 4f; 	  // Distance between lanes
     public float laneChangeSpeed = 10f;   // Speed of lane change
 
     [Header("Speed Increase Settings")]
     public float speedIncreaseRate = 0.1f; // How much speed increases every second
-    public float maxSpeed = 25f;           // Maximum speed limit
-    private float speedTimer = 0f;         // Timer to control speed increase
+    public float maxSpeed = 25f; 		  // Maximum speed limit
+    private float speedTimer = 0f; 		  // Timer to control speed increase
 
     [Header("Boundary Settings")]
     public float maxLaneOffset = 3.8f;
 
     [Header("Jump Settings")]
-    public float jumpForce = 7f;           // How strong the jump is
-    private bool isGrounded = true;        // Check if player is on the ground
+    public float jumpForce = 7f; 		  // How strong the jump is
+    private bool isGrounded = true; 	  // Check if player is on the ground
 
-    private int desiredLane = 1;           // 0 = Left, 1 = Middle, 2 = Right
-    private float targetX;                 // Target X position for lane
+    private int desiredLane = 1; 		  // 0 = Left, 1 = Middle, 2 = Right
+    private float targetX; 				  // Target X position for lane
 
-    private GameManager gameManager;       // Reference to GameManager
+    private GameManager gameManager; 	  // Reference to GameManager
 
     void Start()
     {
@@ -61,9 +61,9 @@ public class PlayerController : MonoBehaviour
             Jump();
         }
 
-        // --- Speed Increase Over Time ---
+        // --- Speed Increase Over Time (Increases every 1 second) ---
         speedTimer += Time.deltaTime;
-        if (speedTimer >= 1f) // every 1 second
+        if (speedTimer >= 1f)
         {
             IncreaseSpeed();
             speedTimer = 0f;
@@ -98,11 +98,8 @@ public class PlayerController : MonoBehaviour
 
     private void IncreaseSpeed()
     {
-        if (forwardSpeed < maxSpeed)
-        {
-            forwardSpeed += speedIncreaseRate;
-            forwardSpeed = Mathf.Clamp(forwardSpeed, 0f, maxSpeed);
-        }
+        // Only increase if not already at max speed
+        forwardSpeed = Mathf.Min(forwardSpeed + speedIncreaseRate, maxSpeed);
     }
 
     private void OnCollisionStay(Collision collision)
@@ -111,6 +108,7 @@ public class PlayerController : MonoBehaviour
         {
             foreach (ContactPoint contact in collision.contacts)
             {
+                // Check if the collision surface normal is pointing mostly upwards (reliable ground check)
                 if (contact.normal.y > 0.7f)
                 {
                     isGrounded = true;

@@ -152,7 +152,7 @@ MonoBehaviour:
   - {fileID: 2578183066971905133, guid: 29d6f872bedeffb4990ba8abb87bdf50, type: 3}
   - {fileID: 4848831768960674086, guid: 9a39149598a33744aab7477aa85cbb21, type: 3}
   - {fileID: 1924645911888358072, guid: 4377462253c8a304f8236808d1c4a55d, type: 3}
-  - {fileID: 3469109364615274947, guid: 6627ae2e62fbf8c48934a171af378d94, type: 3}
+  - {fileID: 2697105420686869154, guid: 6627ae2e62fbf8c48934a171af378d94, type: 3}
   - {fileID: 570101489397400085, guid: b35b6f8a63b16564cad9b838dafedf86, type: 3}
   - {fileID: 7531878148812534902, guid: 0582a2b80e6a98043a5abe27b698b178, type: 3}
   - {fileID: 987674909279701056, guid: f8e98c420dde2e240ae3ecd4322e5bb6, type: 3}
@@ -1157,7 +1157,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400066, guid: 4a7c3ad7168bb834b87a91e3f94ad3d6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -11.37
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400066, guid: 4a7c3ad7168bb834b87a91e3f94ad3d6, type: 3}
       propertyPath: m_LocalRotation.w
