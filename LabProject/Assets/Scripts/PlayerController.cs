@@ -5,23 +5,26 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody rb;
+    public ParticleSystem dirtParticle;
 
     [Header("Movement Settings")]
     public float forwardSpeed = 5f;
-    public float laneDistance = 4f;
-    public float laneChangeSpeed = 10f;
+    public float sideSpeed = 10f;
+    public float maxX = 4f; // Road boundary
+
+    [Header("Smooth Movement Settings")]
+    public float acceleration = 10f;   // How fast player speeds up when moving sideways
+    public float deceleration = 15f;   // How fast player stops when key is released
+    private float currentHorizontalSpeed = 0f;
 
     [Header("Speed Increase Settings")]
-    public float speedIncreaseRate = 0.1f;
+    public float speedIncreaseRate = 0.5f;
     public float maxSpeed = 25f;
     private float speedTimer = 0f;
 
     [Header("Jump Settings")]
     public float jumpForce = 7f;
     private bool isGrounded = true;
-
-    private int desiredLane = 1;
-    private float targetX;
 
     private GameManager gameManager;
 
@@ -30,27 +33,15 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.useGravity = true;
         rb.freezeRotation = true;
-        targetX = 0f;
 
         gameManager = FindObjectOfType<GameManager>();
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            desiredLane = Mathf.Clamp(desiredLane + 1, 0, 2);
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            desiredLane = Mathf.Clamp(desiredLane - 1, 0, 2);
-        }
+        HandleMovementInput();
 
-        if (Input.GetKeyDown(KeyCode.UpArrow) && isGrounded)
-        {
-            Jump();
-        }
-
+        // Increase forward speed gradually
         speedTimer += Time.deltaTime;
         if (speedTimer >= 1f)
         {
@@ -58,24 +49,58 @@ public class PlayerController : MonoBehaviour
             speedTimer = 0f;
         }
 
-        targetX = (desiredLane - 1) * laneDistance;
+        if (Input.GetKeyDown(KeyCode.UpArrow) && isGrounded)
+        {
+            Jump();
+        }
     }
 
     void FixedUpdate()
     {
+        // Constant forward movement
         Vector3 forwardMove = Vector3.forward * forwardSpeed * Time.fixedDeltaTime;
 
-        float newX = Mathf.MoveTowards(transform.position.x, targetX, laneChangeSpeed * Time.fixedDeltaTime);
+        // Horizontal movement (smooth)
+        Vector3 horizontalMove = Vector3.right * currentHorizontalSpeed * Time.fixedDeltaTime;
 
-        Vector3 newPosition = new Vector3(newX, rb.position.y, rb.position.z) + forwardMove;
+        Vector3 newPosition = rb.position + forwardMove + horizontalMove;
+
+        // Prevent going off-road
+        newPosition.x = Mathf.Clamp(newPosition.x, -maxX, maxX);
 
         rb.MovePosition(newPosition);
+    }
+
+    private void HandleMovementInput()
+    {
+        float targetSpeed = 0f;
+
+        if (Input.GetKey(KeyCode.RightArrow))
+            targetSpeed = sideSpeed;
+        else if (Input.GetKey(KeyCode.LeftArrow))
+            targetSpeed = -sideSpeed;
+        else
+            targetSpeed = 0f;
+
+        // Smoothly change speed toward target speed
+        if (Mathf.Abs(targetSpeed) > 0.01f)
+        {
+            currentHorizontalSpeed = Mathf.MoveTowards(currentHorizontalSpeed, targetSpeed, acceleration * Time.deltaTime);
+        }
+        else
+        {
+            currentHorizontalSpeed = Mathf.MoveTowards(currentHorizontalSpeed, 0f, deceleration * Time.deltaTime);
+        }
     }
 
     private void Jump()
     {
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         isGrounded = false;
+
+        // Stop dirt when jumping
+        if (dirtParticle.isPlaying)
+            dirtParticle.Stop();
     }
 
     private void IncreaseSpeed()
@@ -83,7 +108,7 @@ public class PlayerController : MonoBehaviour
         forwardSpeed = Mathf.Min(forwardSpeed + speedIncreaseRate, maxSpeed);
     }
 
-    private void OnCollisionStay(Collision collision)
+    private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
@@ -92,8 +117,20 @@ public class PlayerController : MonoBehaviour
                 if (contact.normal.y > 0.7f)
                 {
                     isGrounded = true;
-                    return;
+
+                    // Play dirt only after landing
+                    if (!dirtParticle.isPlaying)
+                        dirtParticle.Play();
                 }
+            }
+        }
+
+        if (collision.gameObject.CompareTag("Obstacle"))
+        {
+            if (gameManager != null)
+            {
+                gameManager.GameOver();
+                FindObjectOfType<AudioManager>().PlaySound("GameOver");
             }
         }
     }
@@ -103,18 +140,6 @@ public class PlayerController : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = false;
-        }
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Obstacle"))
-        {
-            if (gameManager != null)
-            {
-                gameManager.GameOver();
-                FindObjectOfType<AudioManager>().PlaySound("GameOver");
-            }
         }
     }
 }
