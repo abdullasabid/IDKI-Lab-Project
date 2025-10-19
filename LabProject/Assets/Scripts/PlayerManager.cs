@@ -9,16 +9,22 @@ public class GameManager : MonoBehaviour
     public UnityEngine.UI.Button restartButton;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI clickToStartText; // Assign in Inspector
-    public TextMeshProUGUI instructionText;  // NEW: Assign in Inspector
+    public TextMeshProUGUI instructionText;  // NEW: Assign in Inspector
 
     public static int numberOfCoins;
     public static bool isGameStarted;
-    private static bool hasGameStartedOnce = false; // Tracks if game started before
+    private static bool hasGameStartedOnce = false; 
 
     private bool isGameOver = false;
+    
+    // NEW: Reference to the PlayerController
+    private PlayerController playerController; 
 
     void Start()
     {
+        // Get PlayerController reference
+        playerController = FindObjectOfType<PlayerController>();
+
         gameOverPanel.SetActive(false);
         restartButton.gameObject.SetActive(false);
         numberOfCoins = 0;
@@ -31,9 +37,12 @@ public class GameManager : MonoBehaviour
                 clickToStartText.gameObject.SetActive(true);
 
             if (instructionText != null)
-                instructionText.gameObject.SetActive(true); // Show instructions
+                instructionText.gameObject.SetActive(true); 
 
             Time.timeScale = 0f; // Pause until player clicks
+            
+            // Ensure particle is stopped while paused
+            playerController?.StopDirtParticle();
         }
         else
         {
@@ -42,10 +51,13 @@ public class GameManager : MonoBehaviour
                 clickToStartText.gameObject.SetActive(false);
 
             if (instructionText != null)
-                instructionText.gameObject.SetActive(false); // Hide instructions
+                instructionText.gameObject.SetActive(false); 
 
             isGameStarted = true;
             Time.timeScale = 1f;
+            
+            // Start particle immediately on restart
+            playerController?.StartDirtParticle();
         }
     }
 
@@ -65,12 +77,15 @@ public class GameManager : MonoBehaviour
         isGameStarted = true;
         hasGameStartedOnce = true;
         Time.timeScale = 1f;
+        
+        // ACTION: Tell the PlayerController to start the dirt particle
+        playerController?.StartDirtParticle(); 
 
         if (clickToStartText != null)
             clickToStartText.gameObject.SetActive(false);
 
         if (instructionText != null)
-            instructionText.gameObject.SetActive(false); // Hide on start
+            instructionText.gameObject.SetActive(false); 
     }
 
     public void GameOver()
@@ -78,6 +93,10 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return;
 
         isGameOver = true;
+        
+        // ACTION: Tell the PlayerController to stop the dirt particle
+        playerController?.StopDirtParticle(); 
+        
         gameOverPanel.SetActive(true);
         restartButton.gameObject.SetActive(true);
         Time.timeScale = 0f;
